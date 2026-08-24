@@ -49,7 +49,10 @@ def test_service_record_validation(record):
         assert "href" in link, f"Link in record '{record['data']['id']}' is missing 'href' field"
         href = link["href"]
         if href.startswith("http"):
-            response = requests.head(href)
+            try:
+                response = requests.head(href, timeout=10)
+            except requests.RequestException as e:
+                raise Exception(f"Failed to request {href=}: {e}") from e
             assert (
                 response.status_code in [200, 301, 302, 308, 401, 403]
             ), f"Link '{href}' in record '{record['data']['id']}' is not returning a valid response (200, 301, 302, 308, 401, 403), got {response.status_code}"
