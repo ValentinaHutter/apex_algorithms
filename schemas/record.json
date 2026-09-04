@@ -2,6 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "APEx Service - OGC API Record",
   "type": "object",
+  "required": [
+    "id",
+    "type",
+    "conformsTo",
+    "geometry",
+    "properties",
+    "links"
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -25,7 +33,7 @@
       "anyOf": [
         {
           "contains": {
-            "const": "http://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core"
+            "const": "https://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core"
           }
         }
       ],
@@ -106,6 +114,8 @@
             "enum": [
               "Agriculture",
               "Land Use/Land Cover Classification",
+              "Land Use/Land Cover Change",
+              "Deforestation",
               "Vegetation",
               "Normalized Difference Vegetation Index (NDVI)",
               "Leaf Area Index (LAI)",
@@ -126,9 +136,14 @@
               "ECMWF ERA5",
               "Data Analysis and Visualization",
               "Statistical Applications",
+              "Forests",
+              "Statistics",
+              "Change Detection Services",
               "Urban Heat Island",
               "Land Surface Temperature",
-              "Climate"
+              "Climate",
+              "Soils",
+              "Radar"
             ]
           },
           "minItems": 1,

@@ -37,6 +37,14 @@ def _load_json_resource(src: Union[dict, str, Path]) -> dict:
         raise ValueError(f"Unsupported JSON resource type {type(src)}")
 
 
+def write_json(json_object: object, file_path: Union[str, Path]) -> None:
+    with open(Path(file_path), "w") as f:
+        j_str = json.dumps(json_object, indent=2)
+        if not j_str.endswith("\n"):
+            j_str += "\n"
+        f.write(j_str)
+
+
 class InvalidMetadataError(ValueError):
     pass
 
@@ -107,7 +115,10 @@ class Algorithm:
 
         if not data.get("type") == "Feature":
             raise InvalidMetadataError(f"Expected a GeoJSON 'Feature' object, but got type {data.get('type')!r}.")
-        if "http://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core" not in data.get("conformsTo", []):
+        data_conforms_to = data.get("conformsTo", [])
+        # TODO: Remove http reference once merged to main
+        if (("https://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core" not in data_conforms_to) and
+                ("https://www.opengis.net/spec/ogcapi-records-1/1.0/req/record-core" not in data_conforms_to)):
             raise InvalidMetadataError(
                 f"Expected an 'OGC API - Records' record object, but got {data.get('conformsTo')!r}."
             )
@@ -158,7 +169,7 @@ class GithubAlgorithmRepository:
         self.branch = branch
         self._session = requests.Session()
         self._organizations = list(self._list_organizations())
-        self._algorithms = None
+        self._algorithms: Optional[dict] = None
 
 
     def _list_organizations(self):

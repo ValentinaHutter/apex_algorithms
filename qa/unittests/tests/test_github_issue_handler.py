@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 from apex_algorithm_qa_tools.github_issue_handler import (
+    BENCHMARK_LABEL,
+    BENCHMARK_PHASE_LABEL_PREFIX,
     GithubApi,
     GithubContext,
     PytestReportParser,
@@ -10,7 +12,9 @@ from apex_algorithm_qa_tools.github_issue_handler import (
     TerminalReportSection,
     TestMetricsData,
 )
-from apex_algorithm_qa_tools.scenarios import BenchmarkScenario
+
+from apex_algorithm_qa_tools.scenarios.factory import read_scenarios_file
+from apex_algorithm_qa_tools.scenarios.scenario import BenchmarkScenario
 
 
 class TestGithubApi:
@@ -321,7 +325,7 @@ class TestScenarioRunInfo:
             / "benchmark_scenarios"
             / "add3x.json"
         )
-        return BenchmarkScenario.read_scenarios_file(path)[0]
+        return read_scenarios_file(path)[0]
 
     @pytest.fixture
     def metrics_data(self) -> TestMetricsData:
@@ -351,6 +355,46 @@ class TestScenarioRunInfo:
                 """
             ),
         )
+
+    @pytest.mark.parametrize(
+        ["phase_exception", "expected_labels"],
+        [
+            (
+                "run-job",
+                [BENCHMARK_LABEL, f"{BENCHMARK_PHASE_LABEL_PREFIX}:run-job"],
+            ),
+            (
+                "compare",
+                [BENCHMARK_LABEL, f"{BENCHMARK_PHASE_LABEL_PREFIX}:compare"],
+            ),
+            (
+                "compare:derived_from-change",
+                [BENCHMARK_LABEL, f"{BENCHMARK_PHASE_LABEL_PREFIX}:compare"],
+            ),
+            (
+                None,
+                [BENCHMARK_LABEL],
+            ),
+        ],
+    )
+    def test_issue_labels(
+        self, benchmark_scenario, github_context, phase_exception, expected_labels
+    ):
+        metrics = {"test:phase:exception": phase_exception} if phase_exception else {}
+        run_info = ScenarioRunInfo(
+            scenario=benchmark_scenario,
+            github_context=github_context,
+            test_metrics=metrics,
+        )
+        assert run_info.issue_labels() == expected_labels
+
+    def test_issue_title(self, benchmark_scenario, github_context):
+        run_info = ScenarioRunInfo(
+            scenario=benchmark_scenario,
+            github_context=github_context,
+            test_metrics={},
+        )
+        assert run_info.issue_title() == "Benchmark: add35"
 
     def test_build_workflow_run_overview_minimal(
         self, benchmark_scenario, github_context
